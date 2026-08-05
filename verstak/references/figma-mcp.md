@@ -1,46 +1,46 @@
-# Проверка Figma MCP
+# Verifying Figma MCP
 
-Поддерживать два варианта. Сначала обнаружить реально доступные инструменты, затем проверить их read-only вызовом. Не требовать конкретное имя MCP-сервера, если набор инструментов однозначно показывает рабочий провайдер.
+Support two provider types. Discover the tools that are actually available, then verify them with a read-only call. Do not require a particular MCP server name when its tool set identifies the provider unambiguously.
 
-## Официальный или базовый Figma MCP
+## Official or base Figma MCP
 
-Ориентироваться на следующие возможности (точные имена могут различаться):
+Look for the following capabilities; exact tool names may vary:
 
-- `get_design_context` — структурированный контекст точного узла;
-- `get_metadata` — облегчённая карта большого узла;
-- `get_screenshot` — визуальный эталон;
-- `get_variable_defs` — переменные и стили;
-- `get_code_connect_map` — связь Figma-компонентов с кодом;
-- `whoami` — проверка удалённой авторизации, если инструмент доступен.
+- `get_design_context` — structured context for an exact node;
+- `get_metadata` — a lightweight map of a large node;
+- `get_screenshot` — the visual reference;
+- `get_variable_defs` — variables and styles;
+- `get_code_connect_map` — mappings between Figma components and code;
+- `whoami` — remote authentication verification, when available.
 
-Проверять подключение вызовом `whoami`, чтением metadata или screenshot для предоставленного пользователем Figma URL/node. Успешный `whoami` подтверждает авторизацию, но не доступ к конкретному файлу — проверить и сам целевой узел.
+Verify the connection with `whoami`, metadata, or a screenshot call for the Figma URL/node supplied by the user. A successful `whoami` confirms authentication but not access to a particular file, so verify the target node as well.
 
-Для реализации соблюдать последовательность:
+Use this implementation sequence:
 
-1. `get_design_context` для точного узла;
-2. при переполненном ответе — `get_metadata`, затем повторный запрос дочерних узлов;
-3. `get_screenshot` для того же узла и варианта;
-4. `get_variable_defs`, Code Connect и экспорт ассетов по необходимости.
+1. Call `get_design_context` for the exact node.
+2. If the response is too large, call `get_metadata`, then request the relevant child nodes.
+3. Call `get_screenshot` for the same node and variant.
+4. Fetch `get_variable_defs`, Code Connect mappings, and asset exports as needed.
 
-Не начинать реализацию, пока нет и структуры, и визуального эталона.
+Do not begin implementation until both structure and a visual reference are available.
 
 ## `@gethopp/figma-mcp-bridge`
 
-Распознавать bridge по таким инструментам, как:
+Recognize the bridge by tools such as:
 
 - `list_files`, `get_document`, `get_selection`, `get_node`;
 - `get_design_context`, `get_metadata`, `get_screenshot`, `save_screenshots`;
 - `get_styles`, `get_variable_defs`;
 - `get_motion_styles`, `get_node_motion`.
 
-Проверять bridge так:
+Verify the bridge as follows:
 
-1. Вызвать `list_files` и убедиться, что нужный Figma-файл подключён.
-2. Если список пуст, попросить открыть нужный файл в Figma и запустить установленный bridge-плагин внутри этого файла.
-3. Получить `get_metadata`, `get_selection` или конкретный `get_node` с правильным `fileKey`.
-4. Получить screenshot того же узла.
+1. Call `list_files` and confirm that the target Figma file is connected.
+2. If the list is empty, ask the user to open the target file in Figma and run the installed bridge plugin inside that file.
+3. Fetch `get_metadata`, `get_selection`, or a specific `get_node` with the correct `fileKey`.
+4. Fetch a screenshot of the same node.
 
-Bridge подключается как stdio MCP-сервер через пакет:
+The bridge runs as a stdio MCP server through this package:
 
 ```json
 {
@@ -51,15 +51,15 @@ Bridge подключается как stdio MCP-сервер через пак�
 }
 ```
 
-Дополнительно требуется Figma-плагин из последнего релиза проекта. Его нужно импортировать через `Plugins > Development > Import plugin from manifest`, открыть в нужном файле и оставить запущенным на время чтения макета. Не устанавливать и не менять пользовательскую MCP-конфигурацию без разрешения пользователя.
+It also requires the Figma plugin from the project's latest release. Import its manifest through `Plugins > Development > Import plugin from manifest`, open the plugin in the target file, and keep it running while reading the design. Do not install software or modify the user's MCP configuration without permission.
 
-Актуальный источник: <https://github.com/gethopp/figma-mcp-bridge>.
+Current source: <https://github.com/gethopp/figma-mcp-bridge>.
 
-## Настройка в OpenCode
+## OpenCode configuration
 
-OpenCode читает MCP-серверы из `opencode.json` или `opencode.jsonc`. Выбрать один подходящий Figma-провайдер, чтобы не раздувать контекст дублирующими инструментами.
+OpenCode reads MCP servers from `opencode.json` or `opencode.jsonc`. Choose one appropriate Figma provider to avoid inflating context with duplicate tool sets.
 
-Официальный удалённый Figma MCP:
+Official remote Figma MCP:
 
 ```json
 {
@@ -74,7 +74,7 @@ OpenCode читает MCP-серверы из `opencode.json` или `opencode.j
 }
 ```
 
-После добавления выполнить `opencode mcp auth figma` и завершить OAuth-вход в браузере. Затем проверить состояние через `opencode mcp list` и чтение целевого Figma-узла.
+After adding it, run `opencode mcp auth figma` and complete the browser OAuth flow. Then verify the status with `opencode mcp list` and read the target Figma node.
 
 Figma MCP Bridge:
 
@@ -91,15 +91,15 @@ Figma MCP Bridge:
 }
 ```
 
-После запуска OpenCode проверить сервер через `opencode mcp list`, затем открыть bridge-плагин в нужном Figma-файле и вызвать `list_files`. Не записывать токены непосредственно в репозиторий; использовать OAuth или переменные окружения OpenCode.
+After starting OpenCode, check the server with `opencode mcp list`, open the bridge plugin in the target Figma file, and call `list_files`. Never store tokens directly in the repository; use OAuth or OpenCode environment variables.
 
-## Ошибки подключения
+## Connection failures
 
-При сбое сообщить:
+When verification fails, report:
 
-1. какой провайдер и инструмент обнаружены;
-2. какой read-only вызов не прошёл;
-3. является ли причиной отсутствие MCP-конфигурации, авторизации, доступа к файлу, точного node ID, запущенного bridge-плагина или соединения;
-4. какое минимальное действие должен выполнить пользователь.
+1. which provider and tools were discovered;
+2. which read-only call failed;
+3. whether the cause is missing MCP configuration, authentication, file access, an exact node ID, a running bridge plugin, or connectivity;
+4. the minimum action required from the user.
 
-После исправления повторить проверочный вызов. Не продолжать по screenshot-превью или памяти, если структурные данные Figma недоступны.
+Repeat the verification call after the fix. Do not continue from a screenshot preview or memory when structured Figma data is unavailable.
