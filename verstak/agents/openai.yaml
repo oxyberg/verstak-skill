@@ -1,0 +1,4 @@
+interface:
+  display_name: "Верстак"
+  short_description: "Pixel-perfect вёрстка по макетам Figma"
+  default_prompt: "Используй $verstak, чтобы сверстать этот макет Figma pixel perfect."
