@@ -93,6 +93,26 @@ Figma MCP Bridge:
 
 After starting OpenCode, check the server with `opencode mcp list`, open the bridge plugin in the target Figma file, and call `list_files`. Never store tokens directly in the repository; use OAuth or OpenCode environment variables.
 
+## Claude Code configuration
+
+Claude Code supports user-scoped MCP servers for all projects and project-scoped servers shared through the repository. Choose one Figma provider and one scope.
+
+Add the official remote Figma MCP for the current user:
+
+```sh
+claude mcp add --transport http --scope user figma https://mcp.figma.com/mcp
+```
+
+For project scope, replace `--scope user` with `--scope project`. Open Claude Code, run `/mcp`, and complete the browser OAuth flow. Verify the result with `claude mcp list` and a read-only call for the target node.
+
+Add Figma MCP Bridge for the current user:
+
+```sh
+claude mcp add --transport stdio --scope user figma-bridge -- npx -y @gethopp/figma-mcp-bridge
+```
+
+For project scope, replace `--scope user` with `--scope project`. Then run `claude mcp list`, open the bridge plugin in the target Figma file, and call `list_files`. Do not configure both providers unless the user needs both intentionally.
+
 ## Connection failures
 
 When verification fails, report:
