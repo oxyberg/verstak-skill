@@ -55,6 +55,44 @@ Bridge подключается как stdio MCP-сервер через пак�
 
 Актуальный источник: <https://github.com/gethopp/figma-mcp-bridge>.
 
+## Настройка в OpenCode
+
+OpenCode читает MCP-серверы из `opencode.json` или `opencode.jsonc`. Выбрать один подходящий Figma-провайдер, чтобы не раздувать контекст дублирующими инструментами.
+
+Официальный удалённый Figma MCP:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "figma": {
+      "type": "remote",
+      "url": "https://mcp.figma.com/mcp",
+      "enabled": true
+    }
+  }
+}
+```
+
+После добавления выполнить `opencode mcp auth figma` и завершить OAuth-вход в браузере. Затем проверить состояние через `opencode mcp list` и чтение целевого Figma-узла.
+
+Figma MCP Bridge:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "figma-bridge": {
+      "type": "local",
+      "command": ["npx", "-y", "@gethopp/figma-mcp-bridge"],
+      "enabled": true
+    }
+  }
+}
+```
+
+После запуска OpenCode проверить сервер через `opencode mcp list`, затем открыть bridge-плагин в нужном Figma-файле и вызвать `list_files`. Не записывать токены непосредственно в репозиторий; использовать OAuth или переменные окружения OpenCode.
+
 ## Ошибки подключения
 
 При сбое сообщить:
