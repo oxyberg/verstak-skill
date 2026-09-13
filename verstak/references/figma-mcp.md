@@ -1,125 +1,26 @@
-# Verifying Figma MCP
+# Reading Figma through MCP
 
-Support two provider types. Discover the tools that are actually available, then verify them with a read-only call. Do not require a particular MCP server name when its tool set identifies the provider unambiguously.
+Read when choosing provider calls or diagnosing missing Figma context. Use tools actually exposed by the environment; names below describe capabilities, not a required server name or call sequence. Reuse successful reads from the current task when the target and design have not changed.
 
 ## Official or base Figma MCP
 
-Look for the following capabilities; exact tool names may vary:
+- `get_design_context`: structured context for the target node.
+- `get_metadata`: a lightweight structural map when a target is large or a response is truncated.
+- `get_screenshot`: the visual reference for the same node and variant.
+- `get_variable_defs`, `get_code_connect_map`: styles and component mappings when relevant.
 
-- `get_design_context` — structured context for an exact node;
-- `get_metadata` — a lightweight map of a large node;
-- `get_screenshot` — the visual reference;
-- `get_variable_defs` — variables and styles;
-- `get_code_connect_map` — mappings between Figma components and code;
-- `whoami` — remote authentication verification, when available.
-
-Verify the connection with `whoami`, metadata, or a screenshot call for the Figma URL/node supplied by the user. A successful `whoami` confirms authentication but not access to a particular file, so verify the target node as well.
-
-Use this implementation sequence:
-
-1. Call `get_design_context` for the exact node.
-2. If the response is too large, call `get_metadata`, then request the relevant child nodes.
-3. Call `get_screenshot` for the same node and variant.
-4. Fetch `get_variable_defs`, Code Connect mappings, and asset exports as needed.
-
-Do not begin implementation until both structure and a visual reference are available.
+A successful target-node read verifies file access. `whoami` verifies authentication only and is unnecessary when the target read succeeds. Fetch child nodes selectively if the complete target is too large; retrieve variables, mappings, and assets as needed.
 
 ## `@gethopp/figma-mcp-bridge`
 
-Recognize the bridge by tools such as:
+The bridge requires its Figma plugin to be running in the target file. Use `list_files` to resolve connected files when needed, then pass the correct `fileKey` to target reads. An empty file list usually requires opening the target file and running its bridge plugin.
 
-- `list_files`, `get_document`, `get_selection`, `get_node`;
-- `get_design_context`, `get_metadata`, `get_screenshot`, `save_screenshots`;
-- `get_styles`, `get_variable_defs`;
-- `get_motion_styles`, `get_node_motion`.
+Use `get_node` or `get_design_context` for structure, `get_screenshot` or `save_screenshots` for the reference, and `get_styles` or `get_variable_defs` for design-system information. Inspect `get_node_motion` or `get_motion_styles` when implementing specified animation. Use selection or document metadata only when the target cannot be resolved directly.
 
-Verify the bridge as follows:
+## Missing context or failed reads
 
-1. Call `list_files` and confirm that the target Figma file is connected.
-2. If the list is empty, ask the user to open the target file in Figma and run the installed bridge plugin inside that file.
-3. Fetch `get_metadata`, `get_selection`, or a specific `get_node` with the correct `fileKey`.
-4. Fetch a screenshot of the same node.
+Report the failed call and distinguish observed errors from suspected causes: configuration, authentication, file access, node selection, plugin state, or connectivity. Use an available equivalent read or request the minimum missing input. Retry after a relevant fix, rather than repeating the same failing call.
 
-The bridge runs as a stdio MCP server through this package:
+Continue repository inspection and work supported by verified context. Keep design-dependent decisions pending when their source is unavailable; do not present guesses as extracted values or claim an unverified match. If the user explicitly requests an approximation from a screenshot, honor that scope and explain its fidelity limits.
 
-```json
-{
-  "figma-bridge": {
-    "command": "npx",
-    "args": ["-y", "@gethopp/figma-mcp-bridge"]
-  }
-}
-```
-
-It also requires the Figma plugin from the project's latest release. Import its manifest through `Plugins > Development > Import plugin from manifest`, open the plugin in the target file, and keep it running while reading the design. Do not install software or modify the user's MCP configuration without permission.
-
-Current source: <https://github.com/gethopp/figma-mcp-bridge>.
-
-## OpenCode configuration
-
-OpenCode reads MCP servers from `opencode.json` or `opencode.jsonc`. Choose one appropriate Figma provider to avoid inflating context with duplicate tool sets.
-
-Official remote Figma MCP:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "figma": {
-      "type": "remote",
-      "url": "https://mcp.figma.com/mcp",
-      "enabled": true
-    }
-  }
-}
-```
-
-After adding it, run `opencode mcp auth figma` and complete the browser OAuth flow. Then verify the status with `opencode mcp list` and read the target Figma node.
-
-Figma MCP Bridge:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "figma-bridge": {
-      "type": "local",
-      "command": ["npx", "-y", "@gethopp/figma-mcp-bridge"],
-      "enabled": true
-    }
-  }
-}
-```
-
-After starting OpenCode, check the server with `opencode mcp list`, open the bridge plugin in the target Figma file, and call `list_files`. Never store tokens directly in the repository; use OAuth or OpenCode environment variables.
-
-## Claude Code configuration
-
-Claude Code supports user-scoped MCP servers for all projects and project-scoped servers shared through the repository. Choose one Figma provider and one scope.
-
-Add the official remote Figma MCP for the current user:
-
-```sh
-claude mcp add --transport http --scope user figma https://mcp.figma.com/mcp
-```
-
-For project scope, replace `--scope user` with `--scope project`. Open Claude Code, run `/mcp`, and complete the browser OAuth flow. Verify the result with `claude mcp list` and a read-only call for the target node.
-
-Add Figma MCP Bridge for the current user:
-
-```sh
-claude mcp add --transport stdio --scope user figma-bridge -- npx -y @gethopp/figma-mcp-bridge
-```
-
-For project scope, replace `--scope user` with `--scope project`. Then run `claude mcp list`, open the bridge plugin in the target Figma file, and call `list_files`. Do not configure both providers unless the user needs both intentionally.
-
-## Connection failures
-
-When verification fails, report:
-
-1. which provider and tools were discovered;
-2. which read-only call failed;
-3. whether the cause is missing MCP configuration, authentication, file access, an exact node ID, a running bridge plugin, or connectivity;
-4. the minimum action required from the user.
-
-Repeat the verification call after the fix. Do not continue from a screenshot preview or memory when structured Figma data is unavailable.
+For an authorized setup or repair task, read the applicable section of [mcp-setup.md](mcp-setup.md).
