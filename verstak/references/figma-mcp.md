@@ -11,11 +11,15 @@ Read when choosing provider calls or diagnosing missing Figma context. Use tools
 
 A successful target-node read verifies file access. `whoami` verifies authentication only and is unnecessary when the target read succeeds. Fetch child nodes selectively if the complete target is too large; retrieve variables, mappings, and assets as needed.
 
+Start with a direct target read when its ID is known. For a known large frame, use a lightweight map first to choose relevant children; after truncation, narrow the next read rather than repeating the same request. Use depth/field filters only when the exposed tool supports them. Preserve layout constraints, typography, styles, asset references, and relevant variants; do not trim information needed for fidelity. Fetch shared definitions once and reuse them across children. A screenshot and structured context serve different purposes and are not duplicate reads.
+
 ## `@gethopp/figma-mcp-bridge`
 
 The bridge requires its Figma plugin to be running in the target file. Use `list_files` to resolve connected files when needed, then pass the correct `fileKey` to target reads. An empty file list usually requires opening the target file and running its bridge plugin.
 
 Use `get_node` or `get_design_context` for structure, `get_screenshot` or `save_screenshots` for the reference, and `get_styles` or `get_variable_defs` for design-system information. Inspect `get_node_motion` or `get_motion_styles` when implementing specified animation. Use selection or document metadata only when the target cannot be resolved directly.
+
+Choose one structural read, not both by default. If its result lacks a necessary field, request that missing evidence specifically. Reuse exported assets by node/export settings and revision when known; refresh when source changes. Keep bulk exports and raw payloads in local artifacts where supported, returning compact relevant summaries to context instead of dumping SVGs or base64. Do not omit source details needed for implementation merely to shorten output.
 
 ## Missing context or failed reads
 

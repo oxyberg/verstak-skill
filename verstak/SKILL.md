@@ -7,11 +7,23 @@ description: Implement screens and components from Figma with pixel-perfect fide
 
 Deliver working UI that reproduces the requested Figma design in the project's existing stack. Preserve its design system, assets, meaningful containers, states, and responsive behavior. The user's explicit choices take precedence over this skill's defaults.
 
-## Source and scope
+## Choose the smallest sufficient scope
+
+- Local correction: inspect the affected node, its controlling container, matching code, and nearby dependencies. Reuse verified context; expand only when inherited styles, layout, or shared components require it. Verify the changed area and affected neighbors.
+- Component or state change: inspect the component, relevant variants, and its integration. Verify affected states, keyboard behavior, and resizing where applicable.
+- New screen or structural layout change: inspect the target frame, reusable components, and supplied responsive frames. Verify the full composition and affected responsive behavior.
+
+Choose scope silently from the request; all scopes retain the fidelity constraints below. Do not perform a full-file or design-system audit for a local change.
+
+## Source and implementation
 
 Use the exact frame, component, or variant requested. Obtain structured Figma context and a screenshot of the same target, including its reference dimensions. Reuse context already verified in the task; a small follow-up does not require rediscovering the file or design system. Read [references/figma-mcp.md](references/figma-mcp.md) when provider selection, missing context, or connection errors need guidance. Setup instructions are needed only for setup or repair.
 
-Inspect the relevant repository components, tokens, fonts, assets, and conventions. Resolve routine choices from the source and code. Ask only when an unresolved choice materially changes the result, such as conflicting design-system mappings with no reliable evidence. Continue independent work while missing input is pending. If Figma is unavailable, distinguish supported work from design details that remain unverified; a user-requested screenshot approximation has a different fidelity limit.
+Use one working Figma provider; switch only for a specific failure or missing capability. Request only needed nodes and fields; avoid duplicate structural reads and whole-file dumps. Batch independent reads where supported. Load supporting references only for the applicable operation, while honoring required tool prerequisites.
+
+Inspect relevant repository components, tokens, fonts, assets, and conventions. Before coding dependent UI, resolve font families/weights, original assets, controlling dimensions, and existing component mappings to prevent rework. Ask only when an unresolved choice materially changes the result; continue independent work meanwhile. If Figma is unavailable, separate supported work from unverified design details; honor a user-requested screenshot approximation without claiming extracted specifications.
+
+For long or multi-screen tasks, keep a compact task-local evidence note: target IDs and source revision if available, reference dimensions, controlling layout/type/token values, mappings, asset paths, inferences, and unresolved questions. Reuse it after context loss. Refresh affected evidence when the target, design, or implementation changes; never treat an old note as proof of an unchanged source. Skip the note for a small self-contained correction.
 
 ## Fidelity constraints
 
@@ -24,10 +36,10 @@ Inspect the relevant repository components, tokens, fonts, assets, and conventio
 
 ## Verify and finish
 
-For UI implementation, run the project and inspect a capture at the reference dimensions. Compare it with the Figma screenshot; use an overlay or pixel diff when useful to locate discrepancies. Correct observable mismatches, especially container geometry, text wrapping, baselines, clipping, and assets. Do not claim visual fidelity from code inspection alone.
+Run the project and inspect a capture at the reference dimensions. Compare the same state, scale, and crop with the Figma screenshot. From each comparison, collect concrete discrepancies and fix a related batch, prioritizing container geometry, fonts/text wrapping, and assets before decoration. Recapture affected views after changes; avoid a screenshot for every CSS property. Do not claim fidelity from code inspection alone. For overlay/diff assistance or persistent comparison noise, read [references/visual-check.md](references/visual-check.md).
 
 Check affected interactive states and responsive behavior at supplied sizes and representative nearby widths when resizing applies. Scale checks to the change: a spacing correction needs focused visual verification; changed layout or behavior needs broader relevant coverage. Run required project checks and relevant existing tests. Repeat or broaden verification only after a change, failure, or unresolved concern warrants it.
 
-Continue through implementation, local execution, inspection, and fixes within the authorized task. Finish when the requested UI is implemented, observable discrepancies are resolved, and relevant checks pass. If access, tooling, or a platform limitation prevents verification or exact reproduction, complete unaffected work and state the precise remaining limitation instead of claiming a perfect match or looping indefinitely.
+Finish when the requested UI is implemented, relevant checks pass, and the latest comparison leaves no concrete unresolved defect. Do not invent polish work after that point. For a persistent discrepancy, diagnose its cause before another edit; do not repeat speculative tweaks. A fixed iteration or token cap must not silently waive a defect. If access, tooling, or a platform limitation prevents verification or reproduction, complete unaffected work and report the precise remaining limitation instead of claiming a perfect match or looping indefinitely.
 
 Respond briefly in the user's language with the result and verification performed. Include assumptions, remaining deviations, or blockers only when present.
